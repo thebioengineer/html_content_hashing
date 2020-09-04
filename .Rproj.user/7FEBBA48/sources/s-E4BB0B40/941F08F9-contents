@@ -1,0 +1,27 @@
+$( document ).ready( function(){
+  
+  var hash = ""
+  var body
+  
+  document.head.childNodes.forEach(function(header_element){
+    if(header_element.nodeName === "META"){
+      if(header_element.name === "content-hash"){
+        hash = header_element.content;
+      }
+    }
+  })
+  
+  body = document.body.innerHTML.trimEnd();
+  
+  actual_hash = CryptoJS.MD5(body).toString();
+  if(hash  == ""){
+    $.notify("No md5 Hash Documented.",
+             {autoHide: false, className: "warning"});
+  }else if(hash === actual_hash){
+    $.notify("Content md5 Hash as expected. Contents are unchanged.", "success");
+  }else{
+    $.notify(
+      "Content md5 Hash does not match. Contents may have been changed.",
+      {autoHide: false, className: "error"});
+  }
+});
