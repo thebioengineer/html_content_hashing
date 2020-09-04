@@ -4,44 +4,44 @@ var doc_contents;
 
 
 
-var head = "";
 
-// exectute before any other scripts are run. get meta and scripts info
-document.head.childNodes.forEach(function(header_element){
-      
-      if(header_element.nodeName === "SCRIPT" |
-      header_element.nodeName === "STYLE"){
-        head = head + header_element.outerHTML;
-      }
-      
-      if(header_element.nodeName === "META"){
-        if(header_element.name === "content-hash"){
-          hash = header_element.content;
-        }
-      }
-      
-});
 
 // exectute once the document dom is ready
 
 window.onload = function() {
-    var body = "";
+  var head = "";
+  var body = "";
     
-    var i;
-    var body_el_list = document.body.children;
-    for( i = 0 ; i < body_el_list.length; i++){
-      body = body + body_el_list[i].outerHTML.trim();
-    }
+    // exectute before any other scripts are run. get meta and scripts info
+  document.head.childNodes.forEach(function(header_element){
+        
+        if(header_element.nodeName === "SCRIPT"){
+          head = head + header_element.outerHTML;
+        }
+        
+        if(header_element.nodeName === "META"){
+          if(header_element.name === "content-hash"){
+            hash = header_element.content;
+          }
+        }
+        
+  });
     
-    doc_contents = "<head>" + head + "</head><body>" + body + "</body>";
+  var i;
+  var body_el_list = document.body.children;
+  for( i = 0 ; i < body_el_list.length; i++){
+    body = body + body_el_list[i].outerHTML.trim();
+  }
+  
+  doc_contents = "<head>" + head + "</head><body>" + body + "</body>";
+  
+  actual_hash = CryptoJS.MD5(doc_contents).toString();
     
 };
 
 
 // determine if the hash matches
 $( document ).ready( function(){
-  
-  actual_hash = CryptoJS.MD5(doc_contents).toString();
   
   if(hash  === ""){
     $.notify("No md5 Hash Documented.",
