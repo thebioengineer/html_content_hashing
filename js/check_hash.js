@@ -1,10 +1,6 @@
 var hash = "";
 var key = "";
-var doc_contents;
-
-
-
-
+var actual_hash;
 
 // exectute once the document dom is ready
 
@@ -33,7 +29,7 @@ window.onload = function() {
     body = body + body_el_list[i].outerHTML.trim();
   }
   
-  doc_contents = "<head>" + head + "</head><body>" + body + "</body>";
+  var doc_contents = "<head>" + head + "</head><body>" + body + "</body>";
   
   actual_hash = CryptoJS.MD5(doc_contents).toString();
     
