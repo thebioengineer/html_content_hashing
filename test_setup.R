@@ -1,10 +1,8 @@
 library(digest)
 library(sodium)
-library(rvest)
-library(xml2)
+library(jsonlite)
 
 add_hashcheck <- function(path, output){
-  
   
   if(missing(output)){
     output <- paste0(tools::file_path_sans_ext(path),"_hash.html")
@@ -13,32 +11,31 @@ add_hashcheck <- function(path, output){
   js <- c(
     "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/core.js\"></script>",
     "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/md5.js\"></script>",
-    "<script src=\"js/check_hash.js\"></script>"
+    "<script src=\"js/check_hash.js\"></script>",
+    "<style>\n.iframe-container {\noverflow: hidden;\nheight: 100%;\nwidth: 100%;\nposition: relative;\n}\n\n.iframe-container iframe {\nborder: 0;\nheight: 100%;\nleft: 0;\nposition: absolute;\ntop: 0;\n width: 100%;\n}\n</style>"
   )
   
   
-  html_doc <- read_html(path)
+  html_file <- read_html(path)
+  
+  html_file
+  
+  html_doc <- trimws(readLines(path,warn = FALSE))
+  
+  doc_base64 <- paste0("data:text/html;base64," , base64_enc(paste(html_doc, collapse="")))
 
-  head <- html_doc %>% 
-    html_nodes("head")
+  doc_digest = digest::digest(
+    gsub("\\n","%0A",doc_base64), ## escape nulls (\n)
+    serialize = FALSE, algo = "md5")
   
-  scripts <- head %>% 
-    html_nodes("script") %>% 
-    as.character() %>% 
-    c(js,.)
+  meta <- c(
+    paste0("<meta name=\"content-hash\" content=\"",doc_digest,"\"/>"),
+    paste0("<meta name=\"content-pubkey\" content=\"",doc_digest,"\"/>")
+  )
   
-  body <- html_doc %>% 
-    html_nodes("body") %>% 
-    html_children() %>% 
-    as.character()
-  
-  doc <- paste0("<head>" ,paste(scripts, collapse = "")  , "</head><body>" , paste(body,collapse = "") , "</body>")
-  
-  doc_digest = digest::digest(doc, serialize = FALSE, algo = "md5")
-  
-  meta <- paste0("<meta name=\"content-hash\" content=\"",doc_digest,"\"/>")
-  
-  doc <- c("<html>","<head>" , meta ,js, as.character(head) , "</head>","<body>" , body , "</body>","</html>")
+  doc <- c("<html>","<head>", meta ,js,"</head>","<body style='margin:0px'>",
+           paste0("<div class='iframe-container'><iframe class = 'doc-content' src=\"",doc_base64, "\"></iframe></div>"),
+           "</body>","</html>")
   
   cat(
     doc,
